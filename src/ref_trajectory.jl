@@ -79,7 +79,7 @@ function reference_trajectory(model::SimpleQuadruped, times;
     
     
     # reference trajectory
-    uref .= kron(ones(N)', [0.5*mb*g; 0.5*mb*g; 0.5*mb*g; 0.5*mb*g]) # 1/2mg for each foot
+    uref .= kron(ones(N)', [0;0;0.5*mb*g; 0;0;0.5*mb*g; 0;0;0.5*mb*g; 0;0;0.5*mb*g]) # 1/2mg for each foot, ignoring foot mass
     
     # Convert to a trajectory
     Xref = [SVector{n}(x) for x in eachcol(xref)]
