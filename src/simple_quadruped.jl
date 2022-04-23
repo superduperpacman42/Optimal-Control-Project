@@ -1,16 +1,16 @@
 Base.@kwdef struct SimpleQuadruped <: AbstractModel
-    g::Float64 = 9.81
-    mb::Float64 = 5.0
-    mf::Float64 = 1.0
-    Jx::Float64 = 1.0
-    Jy::Float64 = 1.0
-    Jz::Float64 = 1.0
-    ℓmin::Float64 = 0.0
-    ℓmax::Float64 = 1.0
-    s1::SVector{3,Float64} = [-1, 1, 0]
-    s2::SVector{3,Float64} = [-1, -1, 0]
-    s3::SVector{3,Float64} = [1, 1, 0]
-    s4::SVector{3,Float64} = [1, -1, 0]
+    g::Float64 = 9.81                      # gravitational acceleration (m/s^2)
+    mb::Float64 = 5.0                      # mass of the body (kg)
+    mf::Float64 = 1.0                      # mass of an individual foot (kg)
+    Jx::Float64 = 1.0                      # moment of inertia about x-axis (kg m^2)
+    Jy::Float64 = 1.0                      # moment of inertia about y-axis (kg m^2)
+    Jz::Float64 = 1.0                      # moment of inertia about z-axis (kg m^2)
+    ℓmin::Float64 = 0.0                    # minimum leg length (m)
+    ℓmax::Float64 = 1.0                    # maximum leg length (m)
+    s1::SVector{3,Float64} = [-1, 1, 0]    # front left shoulder relative to CoM (m)
+    s2::SVector{3,Float64} = [-1, -1, 0]   # rear left shoulder relative to CoM (m)
+    s3::SVector{3,Float64} = [1, 1, 0]     # front right shoulder relative to CoM (m)
+    s4::SVector{3,Float64} = [1, -1, 0]    # rear right shoulder relative to CoM (m)
 end
 RobotDynamics.state_dim(::SimpleQuadruped) = 37
 RobotDynamics.control_dim(::SimpleQuadruped) = 12
@@ -20,18 +20,18 @@ function skew(v)
 end
 
 function RobotDynamics.dynamics(model::SimpleQuadruped, x, u, t, mode)
-    rb = x[1:3]
-    ab = x[4:7]
-    r1 = x[8:10]
-    r2 = x[11:13]
-    r3 = x[14:16]
-    r4 = x[17:19]
-    vb = x[20:22]
-    wb = x[23:25]
-    v1 = x[26:28]
-    v2 = x[29:31]
-    v3 = x[32:34]
-    v4 = x[35:37]
+    rb = x[1:3]   # body position (m)
+    ab = x[4:7]   # body orientation (quaternion)
+    r1 = x[8:10]  # foot 1 position (m)
+    r2 = x[11:13] # foot 2 position (m)
+    r3 = x[14:16] # foot 3 position (m)
+    r4 = x[17:19] # foot 4 position (m)
+    vb = x[20:22] # body velocity (m/s)
+    wb = x[23:25] # body angular velocity in body frame (rad/s)
+    v1 = x[26:28] # foot 1 velocity (m/s)
+    v2 = x[29:31] # foot 2 velocity (m/s)
+    v3 = x[32:34] # foot 3 velocity (m/s)
+    v4 = x[35:37] # foot 4 velocity (m/s)
     
     mb = model.mb
     mf = model.mf
@@ -39,10 +39,10 @@ function RobotDynamics.dynamics(model::SimpleQuadruped, x, u, t, mode)
     Jy = model.Jy
     Jz = model.Jz
     J = Diagonal([Jx, Jy, Jz])
-    g = [0, 0, model.g]
+    g = [0, 0, -model.g]
     
     M = Diagonal(vcat(ones(3)*mb, Jx, Jy, Jz, ones(12)*mf))
-    V = vcat(-mb*g, zeros(3), -mf*g*(1-mode[1]), -mf*g*(1-mode[2]), -mf*g*(1-mode[3]), -mf*g*(1-mode[4]))
+    V = vcat(mb*g, zeros(3), mf*g*(1-mode[1]), mf*g*(1-mode[2]), mf*g*(1-mode[3]), mf*g*(1-mode[4]))
     C = vcat(zeros(3), cross(wb, J*wb), zeros(12))
     B = [-I(3) -I(3) -I(3) -I(3);
          skew(r1) skew(r2) skew(r3) skew(r4);
