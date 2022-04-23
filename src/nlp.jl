@@ -59,33 +59,38 @@ struct HybridNLP{n,m,L,Q} <: MOI.AbstractNLPEvaluator
         times = collect(range(0, tf, length=N))
         
         # Specify the mode sequence
+        
+        # NOTE: MODIFY THIS MODE SEQUENCE ####################
         modes = map(1:N) do k
             isodd((k-1) ÷ M + 1) ? 1 : 2
         end
         Nmodes = Int(ceil(N/M))
+        # ####################################################
         
-        # TODO: specify the constraint indices
-        c_init_inds = 1:n          # initial constraint
-        c_term_inds = (c_init_inds[end]+1):(c_init_inds[end]+n)          # terminal constraint
-        c_dyn_inds = (c_term_inds[end]+1):(c_term_inds[end]+n*(N-1))           # dynamics constraints
-        c_stance_inds = (c_dyn_inds[end]+1):(c_dyn_inds[end]+N)        # stance constraint (1 per time step)
-        c_length_inds = (c_stance_inds[end]+1):(c_stance_inds[end]+(2*N))        # length bounds     (2 per time step)
+        # specify the constraint indices
+        c_init_inds = 1:n                                                  # initial constraint
+        c_term_inds = (c_init_inds[end]+1):(c_init_inds[end]+n)            # terminal constraint
+        c_dyn_inds = (c_term_inds[end]+1):(c_term_inds[end]+n*(N-1))       # dynamics constraints
+        c_length_inds = (c_dyn_inds[end]+1):(c_dyn_inds[end]+(4*N))        # length bounds     (4 per time step)
+        c_height_inds = (c_length_inds[end]+1):(c_length_inds[end]+(4*N))  # stance foot height = ground, swing foot height > ground (4 per time step)
         
         m_nlp = c_length_inds.stop # total number of constraints
+        
         
         # TODO: specify the bounds on the constraints
         #lb = fill(+Inf,m_nlp)                                                # lower bounds on the constraints
         #ub = fill(-Inf,m_nlp)                                                # upper bounds on the constraints
         
         lb = zeros(m_nlp)
-        lb[c_length_inds] .= 0.5 # min length
+        lb[c_length_inds] .= 0.0 # min length
         
         ub = zeros(m_nlp)
-        ub[c_length_inds] .= 1.5 # max length
+        ub[c_length_inds] .= 1.0 # max length
         
 
+        
         # Other initialization
-        cinds = [c_init_inds, c_term_inds, c_dyn_inds, c_stance_inds, c_length_inds]
+        cinds = [c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds]
         n_nlp = n*N + (N-1)*m
         zL = fill(-Inf, n_nlp)
         zU = fill(+Inf, n_nlp)

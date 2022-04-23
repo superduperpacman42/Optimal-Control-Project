@@ -1,8 +1,9 @@
-function reference_trajectory(model::UnitreeA1, times;
+function reference_trajectory(model::SimpleQuadruped, times;
         xinit = 0.0,
-        xterm = 10.0,
-        height = 1.0, # MODIFY LATER based on leg lengths
+        xterm = 10.0
     )
+    
+    height = 0.8*model.ℓmax # just guessed on this
     
     # Some useful variables
     n,m = size(model)
@@ -10,10 +11,9 @@ function reference_trajectory(model::UnitreeA1, times;
     N = length(times)
     Δx = xterm - xinit
     
-    # NEED TO SET THESE IN OUT MODEL SCTRUCT
     mb,g = model.mb, model.g
-    body_width = model.body_width
-    body_length = model.body_length
+    body_width = 2*abs(model.s1[2]) # from FL shoulder y pos wrt COM
+    body_length = 2*abs(model.s1[1]) # from FL shoulder x pos wrt COM
     
     # initialization
     xref = zeros(n,N)
