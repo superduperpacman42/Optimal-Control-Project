@@ -15,6 +15,29 @@ end
 RobotDynamics.state_dim(::SimpleQuadruped) = 37
 RobotDynamics.control_dim(::SimpleQuadruped) = 12
 
+function simplifyQuadruped(full_model)
+    mf = RigidBodyDynamics.spatial_inertia(findbody(full_model.mech, "RR_foot")).mass
+    mb = RigidBodyDynamics.spatial_inertia(findbody(full_model.mech, "trunk")).mass + 
+         RigidBodyDynamics.spatial_inertia(findbody(full_model.mech, "RR_hip")).mass*4 +
+         RigidBodyDynamics.spatial_inertia(findbody(full_model.mech, "RR_thigh")).mass*4 +
+         RigidBodyDynamics.spatial_inertia(findbody(full_model.mech, "RR_calf")).mass*4
+    J = RigidBodyDynamics.spatial_inertia(findbody(full_model.mech, "trunk")).moment
+    state = MechanismState(full_model.mech)
+    zero!(state)
+    leg = translation(relative_transform(state, 
+          default_frame(findbody(full_model.mech, "RR_hip")),
+          default_frame(findbody(full_model.mech, "RR_foot"))))
+    s1 = translation(relative_transform(state, 
+         default_frame(findbody(full_model.mech, "trunk")),
+         default_frame(findbody(full_model.mech, "RR_hip"))))
+    s1 = vcat(-s1[2], s1[1], s1[3])
+    s2 = s1.*[1,-1,1]
+    s3 = s1.*[-1,1,1]
+    s4 = s1.*[-1,-1,1]
+
+    model = SimpleQuadruped(mf=mf, mb=mb, Jx=J[1,1], Jy=J[2,2], Jz=J[3,3], ℓmax=leg[3], s1=s1, s2=s2, s3=s3, s4=s4)
+end
+
 function skew(v)
     return [0 -v[3] v[2]; v[3] 0 -v[1]; -v[2] v[1] 0]
 end
