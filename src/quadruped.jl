@@ -121,7 +121,7 @@ Read the A1 urdf and attach the foot to the floor. Returns a `Mechanism` type.
 """
 function build_quadruped()
     a1 = parse_urdf(URDFPATH, floating=true, remove_fixed_tree_joints=false) 
-    attach_foot!(a1)
+#     attach_foot!(a1)
     return a1
 end
 
