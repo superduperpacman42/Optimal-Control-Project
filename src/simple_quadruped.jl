@@ -42,6 +42,22 @@ function skew(v)
     return [0 -v[3] v[2]; v[3] 0 -v[1]; -v[2] v[1] 0]
 end
 
+function q2L(q)
+    s = q[1]
+    v = q[2:4]
+    return [s -v'; v s*I(3)+skew(v)]
+end
+
+function q2R(q)
+    s = q[1]
+    v = q[2:4]
+    return [s -v'; v s*I(3)-skew(v)]
+end
+
+function q2Q(q)
+    return (q2R(q)'*q2L(q))[2:4,2:4]
+end
+
 function RobotDynamics.dynamics(model::SimpleQuadruped, x, u, t, mode)
     rb = x[1:3]   # body position (m)
     ab = x[4:7]   # body orientation (quaternion)
@@ -71,7 +87,7 @@ function RobotDynamics.dynamics(model::SimpleQuadruped, x, u, t, mode)
          skew(r1) skew(r2) skew(r3) skew(r4);
          Diagonal(vcat(ones(3)*(1-mode[1]), ones(3)*(1-mode[2]), ones(3)*(1-mode[3]), ones(3)*(1-mode[4])))]
     accel = inv(M)*(B*u+V-C)
-    adot = 0.5*ab + vcat(0,wb)
+    adot = 0.5*q2L(ab)*vcat(0,wb)
     vel = vcat(vb, adot, v1, v2, v3, v4)
     return [vel; accel]
 end
@@ -101,5 +117,5 @@ function discrete_jacobian(model::SimpleQuadruped, x, u, t, dt, mode)
 end
 
 function jump_jacobian(mode2)
-    return (vcat(ones(25), ones(3)*(1-mode2[1]), ones(3)*(1-mode2[2]), ones(3)*(1-mode2[3]), ones(3)*(1-mode2[4])))
+    return Diagonal(vcat(ones(25), ones(3)*(1-mode2[1]), ones(3)*(1-mode2[2]), ones(3)*(1-mode2[3]), ones(3)*(1-mode2[4])))
 end

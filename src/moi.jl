@@ -37,7 +37,6 @@ function MOI.jacobian_structure(nlp::HybridNLP)
     end
 end
     
-    
 function initialize_sparsity!(nlp::HybridNLP{n,m}) where {n,m}
     blocks = nlp.blocks
     
@@ -47,52 +46,28 @@ function initialize_sparsity!(nlp::HybridNLP{n,m}) where {n,m}
     N = nlp.N                      # number of time steps
     M = nlp.M                      # time steps per mode
     Nmodes = nlp.Nmodes            # number of mode sequences (N ÷ M)
+    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds = nlp.cinds
     
-    Nt = nlp.N
-    Nx,Nu = n,m
-    dt = nlp.times[2]
-    Nm = nlp.M
-
+    # Init/final
+    setblock!(blocks, c_init_inds, xi[1])
+    setblock!(blocks, c_term_inds, xi[end])
     
-    ic = (1:n) .+ (nlp.cinds[3][1]-1)
-    for k = 1:(Nmodes-1)
-        for j = 1:(Nm-1)
-            s = (k-1)*Nm + j
-            zi = [xi[s]; ui[s]]
-            setblock!(blocks, ic, zi)
-            setblock!(blocks, ic, xi[s+1])
-            ic = ic .+ n
+    # Dynamics
+    for k = 1:N-1
+        setblock!(blocks, c_dyn_inds[(k-1)*n+1:k*n], vcat(xi[k], ui[k], xi[k+1]))
+    end
+    
+    # Length
+    for k = 1:N
+        setblock!(blocks, c_length_inds[k*4-3:k*4], xi[k])
+    end
+    
+    # Height
+    for k = 1:N
+        for l = 1:4
+            setblock!(blocks, c_height_inds[k*4+l-4],xi[k][3*l+10])
         end
-        s = k*Nm
-        zi = [xi[s]; ui[s]]
-        setblock!(blocks, ic, zi)
-        setblock!(blocks, ic, xi[s+1])
-        ic = ic .+ n
     end
-    for j = 1:(Nm-1)
-        s = (Nmodes-1)*Nm + j
-        zi = [xi[s]; ui[s]]
-        setblock!(blocks, ic, zi)
-        setblock!(blocks, ic, xi[s+1])
-
-        ic = ic .+ n
-    end
-    
-    setblock!(blocks, nlp.cinds[1], xi[1])
-    setblock!(blocks, nlp.cinds[2], xi[end])
-    
-    t = 1
-    for k = 1:nlp.N
-        
-        # stance constraint
-        foot_ind = nlp.modes[k] == 1 ? 4 : 6
-        setblock!(blocks, t + nlp.cinds[4][1] - 1, xi[k][foot_ind])
-        
-        # length constraint
-        setblock!(blocks, nlp.cinds[5][1] - 1 + 2*(k-1) .+ (1:2), xi[k])
-        t += 1
-    end
-
 end
 
 

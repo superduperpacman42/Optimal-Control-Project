@@ -37,7 +37,7 @@ struct HybridNLP{n,m,L,Q} <: MOI.AbstractNLPEvaluator
     x0::MVector{n,Float64}                   # initial condition
     xf::MVector{n,Float64}                   # final condition
     times::Vector{Float64}                   # vector of times
-    modes::Vector{Int}                       # mode ID
+    modes::Matrix{Float64}                   # contact sequence (4xN)
     xinds::Vector{SVector{n,Int}}            # Z[xinds[k]] gives states for time step k
     uinds::Vector{SVector{m,Int}}            # Z[uinds[k]] gives controls for time step k
     cinds::Vector{UnitRange{Int}}            # indices for each of the constraints
@@ -50,7 +50,7 @@ struct HybridNLP{n,m,L,Q} <: MOI.AbstractNLPEvaluator
     use_sparse_jacobian::Bool
     blocks::BlockViews
     function HybridNLP(model, obj::Vector{<:QuadraticCost{n,m}},
-            tf::Real, N::Integer, M::Integer, x0::AbstractVector, xf::AbstractVector, 
+            tf::Real, N::Integer, M::Integer, x0::AbstractVector, xf::AbstractVector, modes::Matrix{Float64},
             integration::Type{<:QuadratureRule}=RK4; use_sparse_jacobian::Bool=false
         ) where {n,m}
         # Create indices
@@ -58,14 +58,7 @@ struct HybridNLP{n,m,L,Q} <: MOI.AbstractNLPEvaluator
         uinds = [SVector{m}((k-1)*(n+m) .+ (n+1:n+m)) for k = 1:N-1]
         times = collect(range(0, tf, length=N))
         
-        # Specify the mode sequence
-        
-        # NOTE: MODIFY THIS MODE SEQUENCE ####################
-        modes = map(1:N) do k
-            isodd((k-1) ÷ M + 1) ? 1 : 2
-        end
         Nmodes = Int(ceil(N/M))
-        # ####################################################
         
         # specify the constraint indices
         c_init_inds = 1:n                                                  # initial constraint
@@ -74,7 +67,7 @@ struct HybridNLP{n,m,L,Q} <: MOI.AbstractNLPEvaluator
         c_length_inds = (c_dyn_inds[end]+1):(c_dyn_inds[end]+(4*N))        # length bounds     (4 per time step)
         c_height_inds = (c_length_inds[end]+1):(c_length_inds[end]+(4*N))  # stance foot height = ground, swing foot height > ground (4 per time step)
         
-        m_nlp = c_length_inds.stop # total number of constraints
+        m_nlp = c_height_inds.stop # total number of constraints
         
         
         # TODO: specify the bounds on the constraints
