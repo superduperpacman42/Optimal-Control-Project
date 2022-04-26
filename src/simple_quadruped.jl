@@ -102,11 +102,11 @@ function rk4(model::SimpleQuadruped, x, u, t, dt, mode)
 end
 
 function jumpmap(model::SimpleQuadruped, x, mode2) 
-    x1 = x[:]
+    x1 = MVector(x)
     for l = 1:4
         x1[26+(l-1)*3:26+(l-1)*3+2] .*= (1-mode2[l])
     end
-    return x1
+    return SVector(x1)
 end
 
 function discrete_jacobian(model::SimpleQuadruped, x, u, t, dt, mode)

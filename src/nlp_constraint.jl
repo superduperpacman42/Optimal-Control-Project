@@ -23,10 +23,9 @@ function dynamics_constraint!(nlp::HybridNLP, c, Z)
         dt = nlp.times[k+1] - t
         if any(modes[:,k] .!= modes[:,k+1])
             x1 = rk4(nlp.model, X[k], U[k], t, dt, modes[:,k])
-            println(x1)
-            c[c_dyn_inds[(k-1)*n+1:k*n]] = jumpmap(nlp.model, x1, modes[:,k+1])
+            c[c_dyn_inds[(k-1)*n+1:k*n]] = jumpmap(nlp.model, x1, modes[:,k+1]) - X[k+1]
         else
-            c[c_dyn_inds[(k-1)*n+1:k*n]] = rk4(nlp.model, X[k], U[k], t, dt, modes[:,k])
+            c[c_dyn_inds[(k-1)*n+1:k*n]] = rk4(nlp.model, X[k], U[k], t, dt, modes[:,k]) - X[k+1]
         end
     end
 end
