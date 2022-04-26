@@ -7,10 +7,10 @@ Base.@kwdef struct SimpleQuadruped <: AbstractModel
     Jz::Float64 = 1.0                      # body moment of inertia about z-axis (kg m^2)
     ℓmin::Float64 = 0.0                    # minimum leg length (m)
     ℓmax::Float64 = 1.0                    # maximum leg length (m)
-    s1::SVector{3,Float64} = [-1, 1, 0]    # front left shoulder relative to CoM (m)
-    s2::SVector{3,Float64} = [-1, -1, 0]   # rear left shoulder relative to CoM (m)
-    s3::SVector{3,Float64} = [1, 1, 0]     # front right shoulder relative to CoM (m)
-    s4::SVector{3,Float64} = [1, -1, 0]    # rear right shoulder relative to CoM (m)
+    s1::SVector{3,Float64} = [1, 1, 0]    # front left shoulder relative to CoM (m)
+    s2::SVector{3,Float64} = [-1, 1, 0]   # rear left shoulder relative to CoM (m)
+    s3::SVector{3,Float64} = [1, -1, 0]     # front right shoulder relative to CoM (m)
+    s4::SVector{3,Float64} = [-1, -1, 0]    # rear right shoulder relative to CoM (m)
 end
 RobotDynamics.state_dim(::SimpleQuadruped) = 37
 RobotDynamics.control_dim(::SimpleQuadruped) = 12
@@ -30,9 +30,8 @@ function simplifyQuadruped(full_model)
     s1 = translation(relative_transform(state, 
          default_frame(findbody(full_model.mech, "trunk")),
          default_frame(findbody(full_model.mech, "RR_hip"))))
-    s1 = vcat(-s1[2], s1[1], s1[3])
-    s2 = s1.*[1,-1,1]
-    s3 = s1.*[-1,1,1]
+    s2 = s1.*[-1,1,1]
+    s3 = s1.*[1,-1,1]
     s4 = s1.*[-1,-1,1]
 
     model = SimpleQuadruped(mf=mf, mb=mb, Jx=J[1,1], Jy=J[2,2], Jz=J[3,3], ℓmax=leg[3], s1=s1, s2=s2, s3=s3, s4=s4)
@@ -43,12 +42,14 @@ function skew(v)
 end
 
 function q2L(q)
+    q = q/norm(q)
     s = q[1]
     v = q[2:4]
     return [s -v'; v s*I(3)+skew(v)]
 end
 
 function q2R(q)
+    q = q/norm(q)
     s = q[1]
     v = q[2:4]
     return [s -v'; v s*I(3)-skew(v)]

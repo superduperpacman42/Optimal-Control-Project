@@ -64,11 +64,12 @@ function jac_c!(nlp::HybridNLP{n,m}, jacvec::AbstractVector, Z) where {n,m}
     for k = 1:N
         v = zeros(4,n)
         Q = q2Q(X[k][4:7])
+        q = Rotations.UnitQuaternion(X[k][4], X[k][5], X[k][6], X[k][7])
         for l = 1:4
             L = X[k][1:3] + Q*s[l] - X[k][3*l+5:3*l+7]
             v[l,1:3] = 2*L
             v[l,3*l+5:3*l+7] = -2*L
-            # TODO: derivative with respect to orientation, v[l,4:7] = 2*L*?
+            v[l,4:7] = 2*L'*Rotations.∇rotate(q, s[l])*norm(X[k][4:7])
         end
         jac[c_length_inds[k*4-3:k*4], xi[k]] = v
     end
