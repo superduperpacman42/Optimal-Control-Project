@@ -75,11 +75,11 @@ struct HybridNLP{n,m,L,Q} <: MOI.AbstractNLPEvaluator
         #ub = fill(-Inf,m_nlp)                                                # upper bounds on the constraints
         
         lb = zeros(m_nlp)
-        lb[c_length_inds] .= 0.0 # min length
+        lb[c_length_inds] .= model.ℓmin^2 # min length
         
         ub = zeros(m_nlp)
-        ub[c_length_inds] .= 1.0 # max length
-        
+        ub[c_length_inds] .= model.ℓmax^2 # max length
+        # TODO: swing height limits        
 
         
         # Other initialization

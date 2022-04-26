@@ -14,15 +14,45 @@ function eval_c!(nlp::HybridNLP, c, Z)
 end
 
 function dynamics_constraint!(nlp::HybridNLP, c, Z)
-
+    X, U = unpackZ(nlp, Z)
+    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds = nlp.cinds
+    modes = nlp.modes
+    n = length(nlp.xinds[1])
+    for k = 1:N-1
+        t = nlp.times[k]
+        dt = nlp.times[k+1] - t
+        if any(modes[:,k] .!= modes[:,k+1])
+            x1 = rk4(nlp.model, X[k], U[k], t, dt, modes[:,k])
+            println(x1)
+            c[c_dyn_inds[(k-1)*n+1:k*n]] = jumpmap(nlp.model, x1, modes[:,k+1])
+        else
+            c[c_dyn_inds[(k-1)*n+1:k*n]] = rk4(nlp.model, X[k], U[k], t, dt, modes[:,k])
+        end
+    end
 end
 
 function length_constraint!(nlp::HybridNLP, c, Z)
-
+    X, U = unpackZ(nlp, Z)
+    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds = nlp.cinds
+    s = [model.s1, model.s2, model.s3, model.s4]
+    for k = 1:N
+        Q = q2Q(X[k][4:7])
+        for l = 1:4
+            L = X[k][1:3] + Q*s[l] - X[k][3*l+5:3*l+7]
+            c[c_length_inds[(k-1)*4+l]] = L'*L
+        end
+    end
 end
 
 function height_constraint!(nlp::HybridNLP, c, Z)
-
+    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds = nlp.cinds
+    X, U = unpackZ(nlp, Z)
+    # Height 4N
+    for k = 1:N
+        for l = 1:4
+            c[c_height_inds[k*4+l-4]] = X[k][3*l+10]
+        end
+    end
 end
 
 """
