@@ -37,7 +37,7 @@ function reference_trajectory(model::SimpleQuadruped, times;
         xref[3,k] = height # body z
         
         # no body rotation in reference
-        xref[4,k] = 1 # no rotation
+        xref[4,N] = 1 # no rotation
         
         # foot index: (1,2,3,4) = (FL,BL,FR,BR)
         
@@ -66,11 +66,17 @@ function reference_trajectory(model::SimpleQuadruped, times;
     # end state
     # set terminal positions, all velocities should 0 out
     
-    # foot x pos
+    # body pos
     xref[1,N] = xterm
     xref[2,N] = 0
     xref[3,N] = height
+    
     xref[4,N] = 1 # no rotation
+    xref[5,N] = 0 # 5:7 already set to 0, so this is unnecessary
+    xref[6,N] = 0
+    xref[7,N] = 0
+    
+    # foot x pos
     xref[8,N] = xterm + (body_length/2)
     xref[11,N] = xterm - (body_length/2)
     xref[14,N] = xterm + (body_length/2)
