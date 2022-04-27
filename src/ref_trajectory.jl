@@ -1,9 +1,9 @@
-function reference_trajectory(model::SimpleQuadruped, times;
+function reference_trajectory(model::SimpleQuadruped, times, modes;
         xinit = 0.0,
         xterm = 10.0
     )
     
-    height = 0.8*model.ℓmax # just guessed on this
+    height = 0.5*model.ℓmax # just guessed on this
     
     # Some useful variables
     n,m = size(model)
@@ -25,7 +25,7 @@ function reference_trajectory(model::SimpleQuadruped, times;
     
     xs = range(xinit,xterm,length=N)
     
-    dt = Δx / tf
+    dt = tf/Δx
     
     # do this smarter in the future
     # to make a less boring trajectory
@@ -37,7 +37,7 @@ function reference_trajectory(model::SimpleQuadruped, times;
         xref[3,k] = height # body z
         
         # no body rotation in reference
-        xref[4,N] = 1 # no rotation
+        xref[4,k] = 1 # no rotation
         
         # foot index: (1,2,3,4) = (FL,BL,FR,BR)
         
@@ -48,19 +48,20 @@ function reference_trajectory(model::SimpleQuadruped, times;
         xref[17,k] = xs[k] - (body_length/2)
         
         # foot y pos
-        xref[9,k] = -body_width / 2
-        xref[12,k] = -body_width / 2
-        xref[15,k] = body_width / 2
-        xref[18,k] = body_width / 2
+        xref[9,k] = body_width / 2
+        xref[12,k] = body_width / 2
+        xref[15,k] = -body_width / 2
+        xref[18,k] = -body_width / 2
         
         # foot z pos
         # keep at 0
-
-        xref[20,k] = (xs[k+1] - xs[k])/dt # body x vel
-        xref[26,k] = (xs[k+1] - xs[k])/dt # foot1 x vel
-        xref[29,k] = (xs[k+1] - xs[k])/dt # foot2 x vel
-        xref[32,k] = (xs[k+1] - xs[k])/dt # foot3 x vel
-        xref[35,k] = (xs[k+1] - xs[k])/dt # foot4 x vel
+        if k > 1
+            xref[20,k] = (xs[k+1] - xs[k])/dt # body x vel
+            xref[26,k] = (xs[k+1] - xs[k])/dt # foot1 x vel
+            xref[29,k] = (xs[k+1] - xs[k])/dt # foot2 x vel
+            xref[32,k] = (xs[k+1] - xs[k])/dt # foot3 x vel
+            xref[35,k] = (xs[k+1] - xs[k])/dt # foot4 x vel
+        end
     end
     
     # end state
@@ -83,14 +84,17 @@ function reference_trajectory(model::SimpleQuadruped, times;
     xref[17,N] = xterm - (body_length/2)
 
     # foot y pos
-    xref[9,N] = -body_width / 2
-    xref[12,N] = -body_width / 2
-    xref[15,N] = body_width / 2
-    xref[18,N] = body_width / 2
+    xref[9,N] = body_width / 2
+    xref[12,N] = body_width / 2
+    xref[15,N] = -body_width / 2
+    xref[18,N] = -body_width / 2
     
     
     # reference trajectory
-    uref .= kron(ones(N)', [0;0;0.5*mb*g; 0;0;0.5*mb*g; 0;0;0.5*mb*g; 0;0;0.5*mb*g]) # 1/2mg for each foot, ignoring foot mass
+    uref .= kron(ones(N)', -[0;0;0.5*mb*g; 0;0;0.5*mb*g; 0;0;0.5*mb*g; 0;0;0.5*mb*g]) # 1/2mg for each foot, ignoring foot mass
+    for k = 1:N-1
+        uref[[3,6,9,12],k] .*= modes[:,k]
+    end
     
     # Convert to a trajectory
     Xref = [SVector{n}(x) for x in eachcol(xref)]

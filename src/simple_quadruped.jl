@@ -42,14 +42,14 @@ function skew(v)
 end
 
 function q2L(q)
-    q = q/norm(q)
+#     q = q/norm(q)
     s = q[1]
     v = q[2:4]
     return [s -v'; v s*I(3)+skew(v)]
 end
 
 function q2R(q)
-    q = q/norm(q)
+#     q = q/norm(q)
     s = q[1]
     v = q[2:4]
     return [s -v'; v s*I(3)-skew(v)]
@@ -101,7 +101,7 @@ function rk4(model::SimpleQuadruped, x, u, t, dt, mode)
     return x + dt*(f1 + 2*f2 + 2*f3 + f4)/6
 end
 
-function jumpmap(model::SimpleQuadruped, x, mode2) 
+function jumpmap(model::SimpleQuadruped, x, mode2)
     x1 = MVector(x)
     for l = 1:4
         x1[26+(l-1)*3:26+(l-1)*3+2] .*= (1-mode2[l])

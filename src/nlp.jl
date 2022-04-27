@@ -79,8 +79,15 @@ struct HybridNLP{n,m,L,Q} <: MOI.AbstractNLPEvaluator
         
         ub = zeros(m_nlp)
         ub[c_length_inds] .= model.ℓmax^2 # max length
-        # TODO: swing height limits        
 
+        # Swing height limits
+        for k = 1:N
+            for l = 1:4
+                if modes[l,k] == 0
+                    ub[c_height_inds][4*(k-1)+l] = +Inf
+                end
+            end
+        end
         
         # Other initialization
         cinds = [c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds]

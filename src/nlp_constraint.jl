@@ -31,6 +31,7 @@ function dynamics_constraint!(nlp::HybridNLP, c, Z)
 end
 
 function length_constraint!(nlp::HybridNLP, c, Z)
+    model = nlp.model
     X, U = unpackZ(nlp, Z)
     c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds = nlp.cinds
     s = [model.s1, model.s2, model.s3, model.s4]
@@ -93,7 +94,7 @@ function jac_c!(nlp::HybridNLP{n,m}, jacvec::AbstractVector, Z) where {n,m}
     for k = 1:N
         v = zeros(4,n)
         Q = q2Q(X[k][4:7])
-        q = Rotations.UnitQuaternion(X[k][4], X[k][5], X[k][6], X[k][7])
+        q = Rotations.UnitQuaternion(X[k][4:7])
         for l = 1:4
             L = X[k][1:3] + Q*s[l] - X[k][3*l+5:3*l+7]
             v[l,1:3] = 2*L
