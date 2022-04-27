@@ -84,7 +84,7 @@ struct HybridNLP{n,m,L,Q} <: MOI.AbstractNLPEvaluator
         for k = 1:N
             for l = 1:4
                 if modes[l,k] == 0
-                    ub[c_height_inds][4*(k-1)+l] = +Inf
+                    ub[c_height_inds[4*(k-1)+l]] = +Inf
                 end
             end
         end

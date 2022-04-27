@@ -50,7 +50,7 @@ function height_constraint!(nlp::HybridNLP, c, Z)
     # Height 4N
     for k = 1:N
         for l = 1:4
-            c[c_height_inds[k*4+l-4]] = X[k][3*l+10]
+            c[c_height_inds[k*4+l-4]] = X[k][3*(l-1)+10]
         end
     end
 end
@@ -107,7 +107,7 @@ function jac_c!(nlp::HybridNLP{n,m}, jacvec::AbstractVector, Z) where {n,m}
     # Height 4N
     for k = 1:N
         for l = 1:4
-            jac[c_height_inds[k*4+l-4],xi[k][3*l+10]] = 1
+            jac[c_height_inds[k*4+l-4],xi[k][3*(l-1)+10]] = 1
         end
     end
 end

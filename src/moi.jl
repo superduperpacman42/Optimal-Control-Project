@@ -65,7 +65,7 @@ function initialize_sparsity!(nlp::HybridNLP{n,m}) where {n,m}
     # Height
     for k = 1:N
         for l = 1:4
-            setblock!(blocks, c_height_inds[k*4+l-4],xi[k][3*l+10])
+            setblock!(blocks, c_height_inds[k*4+l-4],xi[k][3*(l-1)+10])
         end
     end
 end
