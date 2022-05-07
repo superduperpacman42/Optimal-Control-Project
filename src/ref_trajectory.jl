@@ -1,4 +1,4 @@
-function reference_trajectory(model::SimpleQuadruped, times, modes;
+function reference_trajectory(model::SimpleQuadruped, times, modes, terrain::Terrain;
         xinit = 0.0,
         xterm = 10.0
     )
@@ -94,6 +94,15 @@ function reference_trajectory(model::SimpleQuadruped, times, modes;
     uref .= kron(ones(N)', -[0;0;0.5*mb*g; 0;0;0.5*mb*g; 0;0;0.5*mb*g; 0;0;0.5*mb*g]) # 1/2mg for each foot, ignoring foot mass
     for k = 1:N-1
         uref[[3,6,9,12],k] .*= modes[:,k]
+    end
+    
+    # compensate for terrain height
+    for k = 1:N
+        xref[3,k] += getHeight(terrain, xref[1,k], xref[2,k])
+        xref[10,k] += getHeight(terrain, xref[8,k], xref[9,k])
+        xref[13,k] += getHeight(terrain, xref[11,k], xref[12,k])
+        xref[16,k] += getHeight(terrain, xref[14,k], xref[15,k])
+        xref[19,k] += getHeight(terrain, xref[17,k], xref[18,k])
     end
     
     # Convert to a trajectory

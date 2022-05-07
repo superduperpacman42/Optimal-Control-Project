@@ -38,6 +38,7 @@ struct HybridNLP{n,m,L,Q} <: MOI.AbstractNLPEvaluator
     xf::MVector{n,Float64}                   # final condition
     times::Vector{Float64}                   # vector of times
     modes::Matrix{Float64}                   # contact sequence (4xN)
+    terrain::Terrain                         # terrain heightmap
     xinds::Vector{SVector{n,Int}}            # Z[xinds[k]] gives states for time step k
     uinds::Vector{SVector{m,Int}}            # Z[uinds[k]] gives controls for time step k
     cinds::Vector{UnitRange{Int}}            # indices for each of the constraints
@@ -50,7 +51,7 @@ struct HybridNLP{n,m,L,Q} <: MOI.AbstractNLPEvaluator
     use_sparse_jacobian::Bool
     blocks::BlockViews
     function HybridNLP(model, obj::Vector{<:QuadraticCost{n,m}},
-            tf::Real, N::Integer, M::Integer, x0::AbstractVector, xf::AbstractVector, modes::Matrix{Float64},
+            tf::Real, N::Integer, M::Integer, x0::AbstractVector, xf::AbstractVector, modes::Matrix{Float64}, terrain::Terrain,
             integration::Type{<:QuadratureRule}=RK4; use_sparse_jacobian::Bool=false
         ) where {n,m}
         # Create indices
@@ -100,7 +101,7 @@ struct HybridNLP{n,m,L,Q} <: MOI.AbstractNLPEvaluator
         
         new{n,m,typeof(model), integration}(
             model, obj,
-            N, M, Nmodes, tf, x0, xf, times, modes,
+            N, M, Nmodes, tf, x0, xf, times, modes, terrain,
             xinds, uinds, cinds, lb, ub, zL, zU, rows, cols, use_sparse_jacobian, blocks
         )
     end
