@@ -15,7 +15,7 @@ end
 
 function dynamics_constraint!(nlp::HybridNLP, c, Z)
     X, U = unpackZ(nlp, Z)
-    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds = nlp.cinds
+    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds, c_body_inds = nlp.cinds
     modes = nlp.modes
     n = length(nlp.xinds[1])
     for k = 1:N-1
@@ -33,7 +33,7 @@ end
 function length_constraint!(nlp::HybridNLP, c, Z)
     model = nlp.model
     X, U = unpackZ(nlp, Z)
-    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds = nlp.cinds
+    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds, c_body_inds = nlp.cinds
     s = [model.s1, model.s2, model.s3, model.s4]
     for k = 1:N
         Q = q2Q(X[k][4:7])
@@ -45,13 +45,14 @@ function length_constraint!(nlp::HybridNLP, c, Z)
 end
 
 function height_constraint!(nlp::HybridNLP, c, Z)
-    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds = nlp.cinds
+    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds, c_body_inds = nlp.cinds
     X, U = unpackZ(nlp, Z)
     # Height 4N
     for k = 1:N
         for l = 1:4
             c[c_height_inds[k*4+l-4]] = X[k][3*(l-1)+10] - getHeight(nlp.terrain, X[k][3*(l-1)+8], X[k][3*(l-1)+9])
         end
+        c[c_body_inds[k]] = X[k][3] - getHeight(nlp.terrain, X[k][1], X[k][2])
     end
 end
 
@@ -70,7 +71,7 @@ function jac_c!(nlp::HybridNLP{n,m}, jacvec::AbstractVector, Z) where {n,m}
     M = nlp.M                      # time steps per mode
     X, U = unpackZ(nlp, Z)
     modes = nlp.modes
-    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds = nlp.cinds
+    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds, c_body_inds = nlp.cinds
     
     # Init/final n, n
     jac[c_init_inds, xi[1]] = I(n)
@@ -112,5 +113,9 @@ function jac_c!(nlp::HybridNLP{n,m}, jacvec::AbstractVector, Z) where {n,m}
             jac[c_height_inds[k*4+l-4],xi[k][3*(l-1)+9]] = -gy
             jac[c_height_inds[k*4+l-4],xi[k][3*(l-1)+10]] = 1
         end
+        gx, gy = getSlope(nlp.terrain, X[k][1], X[k][2])
+        jac[c_body_inds[k], xi[k][3]] = 1
+        jac[c_body_inds[k], xi[k][1]] = -gx
+        jac[c_body_inds[k], xi[k][2]] = -gy
     end
 end

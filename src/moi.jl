@@ -46,7 +46,7 @@ function initialize_sparsity!(nlp::HybridNLP{n,m}) where {n,m}
     N = nlp.N                      # number of time steps
     M = nlp.M                      # time steps per mode
     Nmodes = nlp.Nmodes            # number of mode sequences (N ÷ M)
-    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds = nlp.cinds
+    c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds, c_body_inds = nlp.cinds
     
     # Init/final
     setblock!(blocks, c_init_inds, xi[1])
@@ -69,6 +69,12 @@ function initialize_sparsity!(nlp::HybridNLP{n,m}) where {n,m}
             setblock!(blocks, c_height_inds[k*4+l-4],xi[k][3*(l-1)+9])
             setblock!(blocks, c_height_inds[k*4+l-4],xi[k][3*(l-1)+10])
         end
+    end
+    
+    for k = 1:N
+        setblock!(blocks, c_body_inds[k],xi[k][3])
+        setblock!(blocks, c_body_inds[k],xi[k][1])
+        setblock!(blocks, c_body_inds[k],xi[k][2])
     end
 end
 

@@ -67,8 +67,9 @@ struct HybridNLP{n,m,L,Q} <: MOI.AbstractNLPEvaluator
         c_dyn_inds = (c_term_inds[end]+1):(c_term_inds[end]+n*(N-1))       # dynamics constraints
         c_length_inds = (c_dyn_inds[end]+1):(c_dyn_inds[end]+(4*N))        # length bounds     (4 per time step)
         c_height_inds = (c_length_inds[end]+1):(c_length_inds[end]+(4*N))  # stance foot height = ground, swing foot height > ground (4 per time step)
+        c_body_inds = (c_height_inds[end]+1):(c_height_inds[end]+(N))      # body height = ground
         
-        m_nlp = c_height_inds.stop # total number of constraints
+        m_nlp = c_body_inds.stop # total number of constraints
         
         
         # TODO: specify the bounds on the constraints
@@ -88,10 +89,12 @@ struct HybridNLP{n,m,L,Q} <: MOI.AbstractNLPEvaluator
                     ub[c_height_inds[4*(k-1)+l]] = +Inf
                 end
             end
+            ub[c_body_inds[k]] = +Inf
+            lb[c_body_inds[k]] = 0.3*model.ℓmax
         end
         
         # Other initialization
-        cinds = [c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds]
+        cinds = [c_init_inds, c_term_inds, c_dyn_inds, c_length_inds, c_height_inds, c_body_inds]
         n_nlp = n*N + (N-1)*m
         zL = fill(-Inf, n_nlp)
         zU = fill(+Inf, n_nlp)
