@@ -22,6 +22,7 @@ function simplifyQuadruped(full_model)
          RigidBodyDynamics.spatial_inertia(findbody(full_model.mech, "RR_thigh")).mass*4 +
          RigidBodyDynamics.spatial_inertia(findbody(full_model.mech, "RR_calf")).mass*4
     J = RigidBodyDynamics.spatial_inertia(findbody(full_model.mech, "trunk")).moment
+    mf = mb/10 # increase foot mass for testing
     state = MechanismState(full_model.mech)
     zero!(state)
     leg = translation(relative_transform(state, 

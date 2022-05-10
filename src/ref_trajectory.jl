@@ -9,7 +9,7 @@ function reference_trajectory(model::SimpleQuadruped, times, modes, step_length,
     tf = times[end]
     N = length(times)
     
-    mb,g = model.mb, model.g
+    mb,g = model.mb + 4*model.mf, model.g
     body_width = 2*abs(model.s1[2]) # from FL shoulder y pos wrt COM
     body_length = 2*abs(model.s1[1]) # from FL shoulder x pos wrt COM
     nft = size(modes)[1] # nft lol

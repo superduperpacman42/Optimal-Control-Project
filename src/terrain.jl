@@ -56,7 +56,7 @@ function plotTerrain(terrain::Terrain)
             z[i, j] = getHeight(terrain, x[i], y[i])
         end
     end
-    surface(y, x, z, aspect_ratio = :equal)
+    surface(x, y, z', aspect_ratio = :equal)
 end
 
 function dtanh(x)
