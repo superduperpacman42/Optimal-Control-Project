@@ -48,12 +48,12 @@ function getSlope(terrain::StepTerrain, x, y)
 end
 
 function plotTerrain(terrain::Terrain)
-    x = 0.:.01:1.
+    x = -.5:.01:1.
     y = -.5:.01:.5
     z = zeros(length(x), length(y))
     for i = 1:length(x)
         for j = 1:length(y)
-            z[i, j] = getHeight(terrain, x[i], y[i])
+            z[i, j] = getHeight(terrain, x[i], y[j])
         end
     end
     surface(x, y, z', aspect_ratio = :equal)

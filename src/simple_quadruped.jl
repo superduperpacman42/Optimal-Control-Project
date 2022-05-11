@@ -81,12 +81,13 @@ function RobotDynamics.dynamics(model::SimpleQuadruped, x, u, t, mode)
     Jz = model.Jz
     J = Diagonal([Jx, Jy, Jz])
     g = [0, 0, -model.g]
+    Q = q2Q(x[4:7])
     
     M = Diagonal(vcat(ones(3)*mb, Jx, Jy, Jz, ones(12)*mf))
     V = vcat(mb*g, zeros(3), mf*g*(1-mode[1]), mf*g*(1-mode[2]), mf*g*(1-mode[3]), mf*g*(1-mode[4]))
     C = vcat(zeros(3), cross(wb, J*wb), zeros(12))
     B = [-I(3) -I(3) -I(3) -I(3);
-         skew(r1) skew(r2) skew(r3) skew(r4);
+         skew(r1-rb)*Q' skew(r2-rb)*Q' skew(r3-rb)*Q' skew(r4-rb)*Q';
          Diagonal(vcat(ones(3)*(1-mode[1]), ones(3)*(1-mode[2]), ones(3)*(1-mode[3]), ones(3)*(1-mode[4])))]
     accel = inv(M)*(B*u+V-C)
     adot = 0.5*q2L(ab)*vcat(0,wb)

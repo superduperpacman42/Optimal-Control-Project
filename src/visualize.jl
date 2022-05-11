@@ -39,7 +39,7 @@ function q2angleaxis(q)
 end
 
 function set_mesh!(vis, initState, terrain)
-    r_foot = 0.05
+    r_foot = 0.02
     bodyFL = Vec(0.0, 0.0, 0.0)
     bodyBR = Vec(l, w, h)
     init_loc = 1/2 * [l, w, h] 
@@ -61,12 +61,12 @@ function set_mesh!(vis, initState, terrain)
     settransform!(vis["f4"], Translation(initState[17:19] + z_shift))
     settransform!(vis["body"], Translation(initState[1:3] - init_loc))
     
-    x = 0.:.001:1.
+    x = -0.5:.001:1.
     y = -.5:.001:.5
     verts = zeros(Point3f0, length(x)*length(y))
     for i = 1:length(x)
         for j = 1:length(y)
-            verts[(i-1)*length(x)+j] = Point3f0(x[i], y[j], getHeight(terrain, x[i], y[j]))
+            verts[(i-1)*length(y)+j] = Point3f0(x[i], y[j], getHeight(terrain, x[i], y[j]))
         end
     end
     colors = [RGB((p.*[1,1,0] .+ [0, 0.5, 0])...) for p in verts]
